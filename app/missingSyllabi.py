@@ -36,23 +36,37 @@ def missingSyllabi():
 
             email_link = None
             if courses_by_email:
-                body_lines = [
-                    "Hello,",
-                    "",
-                    "The following course(s) are missing a syllabus:",
-                ]
+                recipients = sorted(courses_by_email)
+                if len(recipients) == 1: # Individual email
+                    recipient = quote(recipients[0], safe="@")
+                    body_lines = [
+                        f"Hello {"".join(courses_by_email[recipient]["names"])},",
+                        "",
+                        "Your following course(s) are missing a syllabus:",
+                    ]
+                else: # Multiple recipients
+                    recipient = ""
+                    email_parameters["bcc"] = ",".join(recipients)
+                    body_lines = [
+                        "Hello,",
+                        "",
+                        "The following course(s) are missing a syllabus:",
+                    ]
                 for instructor_details in courses_by_email.values():
                     names = ", ".join(sorted(instructor_details["names"]))
                     course_names = ", ".join(sorted(instructor_details["courses"]))
-                    body_lines.append(f"- {names}: {course_names}")
+                    if len(recipients) == 1:
+                        body_lines.append(f"- {course_names}")
+                    else:
+                        body_lines.append(f"- {names}: {course_names}")
                 body_lines.extend(["", "Please upload the syllabus. Thank you!"])
-                email_link = "mailto:?" + urlencode(
-                    {
-                        "bcc": ",".join(sorted(courses_by_email)),
-                        "subject": "Missing syllabus reminder",
-                        "body": "\n".join(body_lines),
-                    },
-                    quote_via=quote,
+                email_parameters = {
+                    "subject": "Missing syllabus reminder",
+                    "body": "\n".join(body_lines),
+                }
+                email_link = "mailto:{}?{}".format(
+                    recipient,
+                    urlencode(email_parameters, quote_via=quote),
                 )
 
             semesters = Semesters.select()
