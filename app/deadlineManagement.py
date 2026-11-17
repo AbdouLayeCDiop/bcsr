@@ -19,8 +19,8 @@ def deadlineCreate():
         date = datetime.datetime.strptime(data['deadlineDate'], "%Y-%m-%d").date()
         today = datetime.date.today()
 
-        if date < today:
-            flash("Deadline could not be created. The date must be today or later.", "danger")
+        if date <= today:
+            flash("Deadline could not be created. The date must be a future date.", "danger")
             return redirect(redirect_url())
 
         deadline = Deadline.create(
